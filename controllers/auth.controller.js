@@ -13,6 +13,7 @@ const { generateToken } = require("../services/jwt.service");
 // @ts-ignore
 const User = require("../models/user.model");
 const AuthToken = require("../models/authtoken.model");
+const OTP = require("../models/otp.model");
 
 router.post("/login", async (req, res) => {
   return res.json({
@@ -181,7 +182,15 @@ router.post("/verify-phone", async (req, res) => {
   try {
     let data = await validator.validateAsync(req.body, { abortEarly: false });
 
-    let user = await User.find({ phone: data.phone });
+    let user = await User.findOne({ phone: data.phone });
+
+    let otp = await OTP.findOne({ phone: data.phone, token: data.token });
+
+    if (!otp) {
+      return res.status(400).json({
+        message: "Phone verification failed",
+      });
+    }
 
     if (!user) {
       return res.status(400).json({
@@ -191,59 +200,111 @@ router.post("/verify-phone", async (req, res) => {
 
     if (user.phoneVerified == true) {
       return res.status(400).json({
-        message: "User account already verified",
+        message: "Phone number already verified",
       });
     }
 
-    if (!user.verifyToken || !user.otp) {
-      return res.status(400).json({
-        message: "Invalid otp validation",
-      });
-    }
-
-    if (user.token == data.token && user.otp == data.otp) {
+    if (otp.token == data.token && otp.otp == data.otp) {
       await user.updateOne({
-        phoneVerified: false,
+        phoneVerified: true,
       });
 
-      _handle_jwt(user);
+      let jwt_token = await _handle_jwt(user);
+
+      await OTP.deleteOne({ phone: data.phone, token: data.token });
 
       return res.status(200).json({
         message: "Phone verified successfully",
+        token: jwt_token,
       });
     } else {
       return res.status(400).json({
-        message: "User account already verified",
+        message: "Phone verification failed",
       });
     }
   } catch (err) {
-    return res.status(400).json({
+    return res.status(500).json({
       message: "Error validating phone number",
       error: err,
     });
   }
 });
 
-const _handle_otp = async (user) => {
-  // await user.updateOne({
-  //   verifyToken: generateUUIDToken(),
-  //   otp: Math.floor(Math.random() * (999999 - 100000 + 1) + 100000),
-  // });
+router.post("/verify-phone-resend-otp", async (req, res) => {
+  let validator = Joi.object({
+    phone: Joi.string()
+      .regex(/^[0-9]{10}$/)
+      .messages({ "string.pattern.base": `Phone number must have 10 digits.` })
+      .required(),
+  });
 
-  return true;
+  try {
+    let data = await validator.validateAsync(req.body, { abortEarly: false });
+
+    let user = await User.findOne({ phone: data.phone });
+
+    let otp_exits = await OTP.findOne({ phone: data.phone });
+
+    if (otp_exits) {
+      return res.status(400).json({
+        message: "Previouse OTP is not expired yet",
+      });
+    }
+
+    if (!user) {
+      return res.status(400).json({
+        message: "Phone number not valid",
+      });
+    }
+
+    if (user.phoneVerified == true) {
+      return res.status(400).json({
+        message: "User account already verified",
+      });
+    }
+
+    let token = await _handle_otp(user);
+
+    return res.status(200).json({
+      message: "Otp sent successfully",
+      token: token,
+    });
+  } catch (err) {
+    return res.status(400).json({
+      message: "Error sending otp",
+      error: err,
+    });
+  }
+});
+
+const _handle_otp = async (user) => {
+  return new Promise(async (resolve, reject) => {
+    let token = generateUUIDToken();
+    let otp = new OTP({
+      phone: user.phone,
+      token: token,
+      otp: Math.floor(Math.random() * (999999 - 100000 + 1) + 100000),
+    });
+    await otp.save();
+    resolve(token);
+  });
 };
 
 const _handle_jwt = async (user) => {
-  let token = generateToken(user.email);
+  return new Promise(async (resolve, reject) => {
+    let token = generateToken(user.email);
 
-  let tokenObj = new AuthToken({
-    userId: user._id,
-    token: token,
+    console.log("token is : ", token);
+
+    let tokenObj = new AuthToken({
+      userId: user._id,
+      token: token,
+    });
+
+    await tokenObj.save();
+
+    resolve(token);
   });
-
-  await tokenObj.save();
-
-  return token;
 };
 
 module.exports = router;
