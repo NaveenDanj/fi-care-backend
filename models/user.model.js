@@ -31,6 +31,11 @@ const UserSchema = new Schema(
       type: String,
       required: false,
     },
+
+    phoneVerified: {
+      type: Boolean,
+      required: false,
+    },
   },
   { timestamps: true, strict: false }
 );

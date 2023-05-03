@@ -8,9 +8,11 @@ const {
 } = require("../services/password.service");
 
 const { generateUUIDToken } = require("../services/token.service");
+const { generateToken } = require("../services/jwt.service");
 
 // @ts-ignore
 const User = require("../models/user.model");
+const AuthToken = require("../models/authtoken.model");
 
 router.post("/login", async (req, res) => {
   return res.json({
@@ -22,7 +24,10 @@ router.post("/register-with-social-account", async (req, res) => {
   let validator = Joi.object({
     fullname: Joi.string().required(),
     email: Joi.string().email().required(),
-    phone: Joi.string().required(),
+    phone: Joi.string()
+      .regex(/^[0-9]{10}$/)
+      .messages({ "string.pattern.base": `Phone number must have 10 digits.` })
+      .required(),
     password: Joi.string().required(),
   });
 
@@ -54,6 +59,9 @@ router.post("/register-with-social-account", async (req, res) => {
     }
 
     let userObject = await user.save();
+
+    // send otp to the phone number later
+    _handle_otp(user);
 
     return res.status(201).json({
       message: "New user created",
@@ -90,6 +98,7 @@ router.post("/register-with-phone-enter-phone", async (req, res) => {
       phone: req.body.phone,
       isNewAccount: true,
       signUpToken: generateUUIDToken(),
+      phoneVerified: false,
     });
 
     let userObject = await user.save();
@@ -144,6 +153,9 @@ router.post("/register-with-phone-enter-account-info", async (req, res) => {
       signUpToken: null,
     });
 
+    // send otp to the phone number later
+    _handle_otp(_user);
+
     return res.status(201).json({
       message: "Account created successfully",
       user: _user,
@@ -155,5 +167,83 @@ router.post("/register-with-phone-enter-account-info", async (req, res) => {
     });
   }
 });
+
+router.post("/verify-phone", async (req, res) => {
+  let validator = Joi.object({
+    phone: Joi.string()
+      .regex(/^[0-9]{10}$/)
+      .messages({ "string.pattern.base": `Phone number must have 10 digits.` })
+      .required(),
+    token: Joi.string().required(),
+    otp: Joi.number().required(),
+  });
+
+  try {
+    let data = await validator.validateAsync(req.body, { abortEarly: false });
+
+    let user = await User.find({ phone: data.phone });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "User account not found",
+      });
+    }
+
+    if (user.phoneVerified == true) {
+      return res.status(400).json({
+        message: "User account already verified",
+      });
+    }
+
+    if (!user.verifyToken || !user.otp) {
+      return res.status(400).json({
+        message: "Invalid otp validation",
+      });
+    }
+
+    if (user.token == data.token && user.otp == data.otp) {
+      await user.updateOne({
+        phoneVerified: false,
+      });
+
+      _handle_jwt(user);
+
+      return res.status(200).json({
+        message: "Phone verified successfully",
+      });
+    } else {
+      return res.status(400).json({
+        message: "User account already verified",
+      });
+    }
+  } catch (err) {
+    return res.status(400).json({
+      message: "Error validating phone number",
+      error: err,
+    });
+  }
+});
+
+const _handle_otp = async (user) => {
+  // await user.updateOne({
+  //   verifyToken: generateUUIDToken(),
+  //   otp: Math.floor(Math.random() * (999999 - 100000 + 1) + 100000),
+  // });
+
+  return true;
+};
+
+const _handle_jwt = async (user) => {
+  let token = generateToken(user.email);
+
+  let tokenObj = new AuthToken({
+    userId: user._id,
+    token: token,
+  });
+
+  await tokenObj.save();
+
+  return token;
+};
 
 module.exports = router;
