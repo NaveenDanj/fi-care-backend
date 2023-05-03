@@ -9,30 +9,30 @@ const UserSchema = new Schema(
 
     fullname: {
       type: String,
-      required: true,
+      required: false,
     },
 
     email: {
       type: String,
-      required: true,
+      required: false,
     },
 
     phone: {
       type: String,
-      required: true,
+      required: false,
     },
 
     photoUrl: {
       type: String,
-      required: true,
+      required: false,
     },
 
     password: {
       type: String,
-      required: true,
+      required: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true, strict: false }
 );
 
 const User = mongoose.model("User", UserSchema);
