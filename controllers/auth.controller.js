@@ -6,9 +6,10 @@ const {
   hashPasswod,
   comparePassword,
 } = require("../services/password.service");
-
 const { generateUUIDToken } = require("../services/token.service");
 const { generateToken } = require("../services/jwt.service");
+
+const AuthRequired = require("../middlewares/userauthrequired.middleware");
 
 // @ts-ignore
 const User = require("../models/user.model");
@@ -275,6 +276,12 @@ router.post("/verify-phone-resend-otp", async (req, res) => {
       error: err,
     });
   }
+});
+
+router.get("/me", AuthRequired(), async (req, res) => {
+  return res.status(200).json({
+    user: req.user,
+  });
 });
 
 const _handle_otp = async (user) => {
