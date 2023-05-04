@@ -17,9 +17,49 @@ const AuthToken = require("../models/authtoken.model");
 const OTP = require("../models/otp.model");
 
 router.post("/login", async (req, res) => {
-  return res.json({
-    hello: "world",
+  let validator = Joi.object({
+    email: Joi.string().email().required(),
+    password: Joi.string().required(),
   });
+
+  try {
+    let data = await validator.validateAsync(req.body, { abortEarly: false });
+
+    let user = await User.findOne({ email: data.email });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "Email or password is incorrect!",
+      });
+    }
+
+    const isMatch = await comparePassword(data.password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        message: "Email or password is incorrect!",
+      });
+    }
+
+    let _token = generateToken(user.email);
+
+    let accessToken = new AuthToken({
+      userId: user._id,
+      token: _token,
+    });
+
+    await accessToken.save();
+
+    return res.status(200).json({
+      user,
+      token: _token,
+    });
+  } catch (err) {
+    return res.status(400).json({
+      message: "Error in user login.",
+      error: err,
+    });
+  }
 });
 
 router.post("/register-with-social-account", async (req, res) => {
@@ -300,8 +340,6 @@ const _handle_otp = async (user) => {
 const _handle_jwt = async (user) => {
   return new Promise(async (resolve, reject) => {
     let token = generateToken(user.email);
-
-    console.log("token is : ", token);
 
     let tokenObj = new AuthToken({
       userId: user._id,
