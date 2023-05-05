@@ -14,7 +14,7 @@ const AuthRequired = require("../middlewares/userauthrequired.middleware");
 // @ts-ignore
 const User = require("../models/user.model");
 const AuthToken = require("../models/authtoken.model");
-const OTP = require("../models/otp.model");
+const OTP = require("../models/ otp.model");
 
 router.post("/login", async (req, res) => {
   let validator = Joi.object({
