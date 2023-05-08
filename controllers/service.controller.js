@@ -199,4 +199,40 @@ router.get('/get-all-services' , async(req , res) => {
 
 });
 
+
+router.get('/get-service-by-id' , async(req , res) => {
+
+    let _id = req.query.id;
+
+    if(!_id){
+        return res.status(400).json({
+            message : "Service id is required"
+        })
+    }
+
+    try{
+        let service = await Service.findOne({ _id : _id })
+    
+        if(!service){
+            return res.status(404).json({
+                message : "Service not found!"
+            })
+        }
+      
+        return res.status(200).json({
+            service,
+        });
+
+    }catch(err){
+        return res.status(400).json({
+            message: "Error finding service.",
+            error: err,
+        });
+    }
+  
+
+});
+
+
+
 module.exports = router;
