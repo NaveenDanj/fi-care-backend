@@ -152,14 +152,14 @@ router.put('/add-service-subcategory' , async (req , res) => {
             })
         }
 
-        service.serviceCategories.push({
+        let subCategory = {
             name : data.name,
             description : data.description,
             price : data.price,
             available : data.available
-        })
+        }
 
-        await service.save();
+        await Service.updateOne({ _id: data.serviceId }, { $push: { serviceCategories: subCategory } })
 
         return res.status(200).json({
             message : "New service subcategory added successfully!",
@@ -176,9 +176,27 @@ router.put('/add-service-subcategory' , async (req , res) => {
 });
 
 
-router.get('/get' , async(req , res) => {
+router.get('/get-all-services' , async(req , res) => {
+
+    let page = +req.query.page || 1;
+    let limit = +req.query.limit || 20;
+    let skip = (page - 1) * limit;
+
+  
+    let services = await Service.find()
+      .skip(skip)
+      .limit(limit);
+  
+    return res.status(200).json({
+        services,
+        paging: {
+            count: await Service.countDocuments(),
+            page: page,
+            limit: limit,
+        },
+
+    });
 
 });
-
 
 module.exports = router;
