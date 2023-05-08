@@ -234,5 +234,33 @@ router.get('/get-service-by-id' , async(req , res) => {
 });
 
 
+router.get('/search-service' , async (req , res) => {
+    let page = +req.query.page || 1;
+    let limit = +req.query.limit || 20;
+    let skip = (page - 1) * limit;
+
+    let param = req.query.param;
+
+    if(!param){
+        return res.status(400).json({
+            message : "Provide query parameter"
+        })
+    }
+
+    let services = await Service.find({serviceName: {$regex: param, $options: 'i'}}).skip(skip).limit(limit);
+
+    return res.status(200).json({
+        services,
+        paging: {
+            // count: await Service.countDocuments(),
+            page: page,
+            limit: limit,
+        },
+
+    });
+
+
+});
+
 
 module.exports = router;
