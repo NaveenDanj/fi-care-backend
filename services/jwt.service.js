@@ -6,4 +6,11 @@ module.exports = {
       expiresIn: "30d",
     });
   },
+
+  generateAdminToken(email){
+    return jwt.sign({ email: email , type : 'admin' }, process.env.JWT_SECRET, {
+      expiresIn: "30d",
+    });
+  }
+
 };

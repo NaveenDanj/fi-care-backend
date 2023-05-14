@@ -3,10 +3,11 @@ const router = express.Router();
 const Joi = require("joi");
 
 
-const Service = require('../models/service.model')
+const Service = require('../models/service.model');
+const AdminAuthRequired = require("../middlewares/AdminAuthRequired.middleware");
 
 
-router.post('/create' , async(req , res) => {
+router.post('/create' , AdminAuthRequired('SuperAdmin') , async(req , res) => {
 
     const categorySchema = Joi.object({
         name: Joi.string().required(),
