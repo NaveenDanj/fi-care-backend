@@ -17,6 +17,11 @@ const ServiceProviderSchema = new Schema(
       required: false,
     },
 
+    photoUrl: {
+      type: String,
+      required: false,
+    },
+
     phone: {
       type: String,
       required: false,
