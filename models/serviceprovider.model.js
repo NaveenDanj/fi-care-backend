@@ -22,14 +22,14 @@ const ServiceProviderSchema = new Schema(
       required: false,
     },
 
-    description : {
-        type : String,
-        required : false
+    description: {
+      type: String,
+      required: false,
     },
 
-    rate : {
-        type : Number,
-        required : false
+    rate: {
+      type: Number,
+      required: false,
     },
 
     photoUrl: {
@@ -50,5 +50,8 @@ const ServiceProviderSchema = new Schema(
   { timestamps: true, strict: false }
 );
 
-const ServiceProvider = mongoose.model("ServiceProvider", ServiceProviderSchema);
+const ServiceProvider = mongoose.model(
+  "ServiceProvider",
+  ServiceProviderSchema
+);
 module.exports = ServiceProvider;

@@ -7,29 +7,38 @@ const AdminSchema = new Schema(
       type: Schema.Types.ObjectId,
     },
 
-    
     email: {
-        type: String,
-        required: false,
+      type: String,
+      required: true,
     },
-    
-    role : {
-        type: Number,
-        required : false
+
+    fullname: {
+      type: String,
+      required: true,
+    },
+
+    role: {
+      type: Number,
+      required: true,
     },
 
     phone: {
       type: String,
-      required: false,
+      required: true,
     },
 
     password: {
       type: String,
-      required: false,
+      required: true,
     },
 
+    activated: {
+      type: Boolean,
+      required: true,
+      default: true,
+    },
   },
-  { timestamps: true, strict: false }
+  { timestamps: true }
 );
 
 const Admin = mongoose.model("Admin", AdminSchema);

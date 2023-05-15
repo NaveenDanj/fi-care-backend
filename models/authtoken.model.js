@@ -19,9 +19,9 @@ const AuthTokenSchema = new Schema(
       unique: true,
     },
 
-    type : {
+    type: {
       type: String,
-      default : 'Admin'
+      default: "Admin",
     },
 
     createdAt: {

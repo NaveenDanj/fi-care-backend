@@ -17,16 +17,15 @@ const ServiceSchema = new Schema(
       required: true,
     },
 
-    price : {
-      type : Number,
-      required : true,
+    price: {
+      type: Number,
+      required: true,
     },
 
     available: {
       type: Boolean,
       required: true,
     },
-
   },
   { timestamps: true, strict: false }
 );
