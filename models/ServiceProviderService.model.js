@@ -23,6 +23,12 @@ const ServiceProviderServiceSchema = new Schema(
       required: true,
     },
 
+    jobsCompleted: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+
     description: {
       type: String,
       required: true,
