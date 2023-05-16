@@ -51,6 +51,11 @@ const ServiceProviderSchema = new Schema(
       type: Boolean,
       required: false,
     },
+
+    activated: {
+      type: Boolean,
+      required: false,
+    },
   },
   { timestamps: true, strict: false }
 );

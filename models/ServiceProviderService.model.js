@@ -15,7 +15,7 @@ const ServiceProviderServiceSchema = new Schema(
 
     categoryId: {
       type: String,
-      required: true,
+      required: false,
     },
 
     charges: {
