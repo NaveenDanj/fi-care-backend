@@ -25,18 +25,18 @@ const ServiceProviderServiceSchema = new Schema(
 
     charges: {
       type: Number,
-      required: true,
+      required: false,
     },
 
     jobsCompleted: {
       type: Number,
-      required: true,
+      required: false,
       default: 0,
     },
 
     description: {
       type: String,
-      required: true,
+      required: false,
     },
   },
   { timestamps: true, strict: false }

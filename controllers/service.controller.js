@@ -163,6 +163,105 @@ router.put("/add-service-subcategory", async (req, res) => {
   }
 });
 
+router.post(
+  "/add-service-providers-to-service",
+  AdminAuthRequired("SuperAdmin"),
+  async (req, res) => {
+    let validator = Joi.object({
+      serviceId: Joi.string().required(),
+      userId: Joi.string().required(),
+      categoryName: Joi.string().required(),
+    });
+
+    try {
+      let data;
+      try {
+        data = await validator.validateAsync(req.body, { abortEarly: false });
+      } catch (err) {
+        return res.status(400).json({
+          message: "Request validation error.",
+          error: err,
+        });
+      }
+
+      let serviceProviderService = await ServiceProviderService.findOne({
+        userId: data.userId,
+        serviceId: data.serviceId,
+      });
+
+      if (serviceProviderService) {
+        return res.status(400).json({
+          message: "User already added to the service",
+        });
+      }
+
+      let user_exists = await ServiceProvider.findOne({ _id: data.userId });
+
+      if (!user_exists) {
+        return res.status(404).json({
+          message: "Service provider not found.",
+        });
+      }
+
+      let service_exists = await Service.findOne({ _id: data.serviceId });
+
+      if (!service_exists) {
+        return res.status(404).json({
+          message: "Service not found.",
+        });
+      }
+
+      if (data.categoryName != "Not-Set") {
+        let found = false;
+
+        for (let i = 0; i < service_exists.serviceCategories.length; i++) {
+          if (service_exists.serviceCategories[i] == data.categoryName) {
+            found = true;
+            break;
+          }
+        }
+
+        if (!found) {
+          return res.status(404).json({
+            message: "Service category not found.",
+          });
+        }
+
+        let sericeProviderService = new ServiceProviderService({
+          userId: data.userId,
+          serviceId: data.serviceId,
+          categoryName: data.categoryName,
+        });
+
+        await sericeProviderService.save();
+
+        return res.status(200).json({
+          message: "Service provider added to the service",
+          sericeProviderService,
+        });
+      }
+
+      let sericeProviderService = new ServiceProviderService({
+        userId: data.userId,
+        serviceId: data.serviceId,
+        categoryName: data.categoryName,
+      });
+
+      await sericeProviderService.save();
+
+      return res.status(200).json({
+        message: "Service provider added to the service",
+        sericeProviderService,
+      });
+    } catch (err) {
+      return res.status(500).json({
+        message: "Error adding service providers",
+        error: err,
+      });
+    }
+  }
+);
+
 router.get("/get-all-services", async (req, res) => {
   let page = +req.query.page || 1;
   let limit = +req.query.limit || 20;
