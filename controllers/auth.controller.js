@@ -88,7 +88,7 @@ router.post("/register-with-social-account", async (req, res) => {
     let email_check = await User.findOne({ email: req.body.email });
     if (email_check) {
       return res.status(400).json({
-        message: "Email already user in another account!",
+        message: "Email already used in another account!",
       });
     }
 
@@ -96,7 +96,7 @@ router.post("/register-with-social-account", async (req, res) => {
     let phone_check = await User.findOne({ phone: req.body.phone });
     if (phone_check) {
       return res.status(400).json({
-        message: "Phone number already user in another account!",
+        message: "Phone number already used in another account!",
       });
     }
 
