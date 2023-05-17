@@ -13,7 +13,7 @@ const ServiceProviderServiceSchema = new Schema(
       required: true,
     },
 
-    categoryId: {
+    categoryName: {
       type: String,
       required: false,
     },
