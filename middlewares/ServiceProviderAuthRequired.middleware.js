@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const AuthToken = require("../models/authtoken.model");
 const ServiceProvider = require("../models/serviceprovider.model");
 
-const ServiceProviderAuthRequired = (role) => {
+const ServiceProviderAuthRequired = () => {
   return async (req, res, next) => {
     const token = req.headers["authorization"];
 
@@ -42,7 +42,7 @@ const ServiceProviderAuthRequired = (role) => {
         if (!user.activated) {
           return res
             .status(403)
-            .json({ error: "Your admin account has been deactivated!" });
+            .json({ error: "Your account has been deactivated!" });
         }
 
         // if (role == "noRoleRequired") {

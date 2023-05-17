@@ -16,6 +16,7 @@ const AuthToken = require("../models/authtoken.model");
 const OTP = require("../models/otp.model");
 const ServiceProvider = require("../models/serviceprovider.model");
 const { handle_otp } = require("../services/otp.service");
+const ServiceProviderAuthRequired = require("../middlewares/ServiceProviderAuthRequired.middleware");
 
 router.post("/login", async (req, res) => {
   let validator = Joi.object({
@@ -371,6 +372,12 @@ router.post("/verify-phone-resend-otp", async (req, res) => {
       error: err,
     });
   }
+});
+
+router.get("/me", ServiceProviderAuthRequired(), async (req, res) => {
+  return res.status(200).json({
+    user: req.user,
+  });
 });
 
 module.exports = router;

@@ -18,6 +18,11 @@ const ServiceProviderServiceSchema = new Schema(
       required: false,
     },
 
+    jobTitle: {
+      type: String,
+      required: false,
+    },
+
     charges: {
       type: Number,
       required: true,
