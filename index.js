@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const path = require("path");
 
 // const cron = require("node-cron");
 const mongoose = require("mongoose");
@@ -24,6 +25,7 @@ mongoose
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
+app.use("/api/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api", api);
 

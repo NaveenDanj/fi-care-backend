@@ -73,6 +73,21 @@ const BookingSchema = new Schema(
       default: "Request-Sent",
     },
 
+    rating: {
+      type: Number,
+      required: false,
+    },
+
+    feedback: {
+      type: String,
+      required: false,
+    },
+
+    image: {
+      type: String,
+      required: false,
+    },
+
     description: {
       type: String,
       required: false,

@@ -8,6 +8,8 @@ const ServiceProviderService = require("../models/ServiceProviderService.model")
 const AuthRequired = require("../middlewares/userauthrequired.middleware");
 const AdminAuthRequired = require("../middlewares/AdminAuthRequired.middleware");
 const ServiceProviderAuthRequired = require("../middlewares/ServiceProviderAuthRequired.middleware");
+const upload = require("../services/imageUpload.service");
+const fs = require("fs");
 
 router.post("/create-booking", AuthRequired(), async (req, res) => {
   const validator = Joi.object({
@@ -271,40 +273,103 @@ router.put(
   }
 );
 
-router.post("/rate-booking-and-continue", AuthRequired(), async (req, res) => {
-  const validator = Joi.object({
-    bookingId: Joi.string().required(),
-    feedback: Joi.string().required(),
-    rating: Joi.number().min(0).max(5),
-    image: Joi.object({
-      size: Joi.number().max(5000000).required(), // Maximum file size in bytes (e.g., 5MB)
-      mimetype: Joi.string().valid("image/jpeg", "image/png").required(),
-    }).required(),
-  });
+router.post(
+  "/rate-booking-and-continue",
+  AuthRequired(),
+  upload.single("image"),
+  async (req, res) => {
+    const acceptedImageTypes = ["image/png", "image/jpg", "image/jpeg"];
 
-  try {
-    let data;
+    const validator = Joi.object({
+      bookingId: Joi.string().required(),
+      feedback: Joi.string(),
+      rating: Joi.number().min(0).max(5),
+    });
 
     try {
-      data = await validator.validateAsync(req.body, {
-        abortEarly: false,
+      let data;
+
+      try {
+        data = await validator.validateAsync(req.body, {
+          abortEarly: false,
+        });
+      } catch (err) {
+        return res.status(400).json({
+          message: "Error in validating request!",
+          error: err,
+        });
+      }
+
+      let booking = await Booking.findOne({ _id: data.bookingId });
+
+      if (!booking) {
+        return res.status(404).json({
+          message: "Booking details not found!",
+        });
+      }
+
+      if (req.file) {
+        if (req.file.fieldname != "image") {
+          _image_upload_roleback(req.file.path);
+          return res.status(400).json({
+            message: "Invalid image field name",
+          });
+        }
+
+        // check if image type acceptable
+        let check = false;
+
+        for (let i = 0; i < acceptedImageTypes.length; i++) {
+          if (acceptedImageTypes[i] == req.file.mimetype) {
+            check = true;
+          }
+        }
+
+        if (!check) {
+          _image_upload_roleback(req.file.path);
+          return res.status(400).json({
+            message: "Invalid image mimetype",
+          });
+        }
+
+        // 733520 = 720KB
+        if (req.file.size > 5000000) {
+          _image_upload_roleback(req.file.path);
+          return res.status(400).json({
+            message: "Image file size too large",
+          });
+        }
+
+        booking.rating = data.rating;
+        booking.feedback = data.feedback;
+        booking.image = req.file.path.replaceAll("\\", "/");
+        await booking.save();
+      }
+
+      booking.rating = data.rating;
+      booking.feedback = data.feedback;
+      await booking.save();
+
+      return res.status(200).json({
+        message: "Your review has been submitted",
       });
     } catch (err) {
-      return res.status(400).json({
-        message: "Error in validating request!",
+      return res.status(500).json({
+        message: "Error in processing payment",
         error: err,
       });
     }
-
-    return res.status(200).json({
-      message: "Your review has been submitted",
-    });
-  } catch (err) {
-    return res.status(500).json({
-      message: "Error in processing payment",
-      error: err,
-    });
   }
-});
+);
+
+const _image_upload_roleback = (filePath) => {
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      return false;
+    } else {
+      return true;
+    }
+  });
+};
 
 module.exports = router;
