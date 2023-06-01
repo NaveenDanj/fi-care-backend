@@ -68,6 +68,7 @@ const BookingSchema = new Schema(
         "Started-Job",
         "Completed-Job",
         "Booking-Cancelled",
+        "Rejected",
       ],
       default: "Request-Sent",
     },
