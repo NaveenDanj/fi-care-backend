@@ -324,6 +324,41 @@ router.get("/me", AuthRequired(), async (req, res) => {
   });
 });
 
+router.post("/user-set-address", AuthRequired(), async (req, res) => {
+  let validator = Joi.object({
+    homeAddress: Joi.string().required(),
+    workAddress: Joi.string().required(),
+  });
+
+  try {
+    let data;
+
+    try {
+      data = await validator.validateAsync(req.body, { abortEarly: false });
+    } catch (err) {
+      return res.status(400).json({
+        message: "Error in validating request!",
+        error: err,
+      });
+    }
+
+    let user = await User.findOne({ _id: req.user._id });
+    user.homeAddress = data.homeAddress;
+    user.workAddress = data.workAddress;
+    await user.save();
+
+    return res.status(200).json({
+      message: "User home address updated successfully!",
+      user,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Error in adding address to user.",
+      error: err,
+    });
+  }
+});
+
 const _handle_otp = async (user) => {
   return new Promise(async (resolve, reject) => {
     let token = generateUUIDToken();

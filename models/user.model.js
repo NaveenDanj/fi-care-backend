@@ -32,6 +32,16 @@ const UserSchema = new Schema(
       required: false,
     },
 
+    homeAddress: {
+      type: String,
+      required: false,
+    },
+
+    workAddress: {
+      type: String,
+      required: false,
+    },
+
     phoneVerified: {
       type: Boolean,
       required: false,
