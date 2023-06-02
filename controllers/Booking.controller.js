@@ -365,14 +365,16 @@ router.post(
           });
         }
         console.log("path is =>>>> ", req.file.path);
-        booking.image = req.file.path.replaceAll("\\", "/");
+        booking.image = req.file.path;
         await booking.save();
       }
-
+      console.log("path is =>>>> 2", req.file.path);
       booking.rating = data.rating;
       booking.feedback = data.feedback;
       booking.reviewed = true;
+      console.log("path is =>>>> 4", req.file.path);
       await booking.save();
+      console.log("path is =>>>> 3", req.file.path);
 
       return res.status(200).json({
         message: "Your review has been submitted",
