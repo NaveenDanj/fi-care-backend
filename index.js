@@ -25,7 +25,7 @@ mongoose
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
-app.use("/api/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/api/static/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api", api);
 
