@@ -303,12 +303,14 @@ router.post(
       let booking = await Booking.findOne({ _id: data.bookingId });
 
       if (!booking) {
+        if (req.file) _image_upload_roleback(req.file.path);
         return res.status(404).json({
           message: "Booking details not found!",
         });
       }
 
       if (booking.userId.toString() != req.user._id.toString()) {
+        if (req.file) _image_upload_roleback(req.file.path);
         return res.status(403).json({
           user: booking.userId != req.user._id,
           booking,
@@ -318,12 +320,14 @@ router.post(
       }
 
       if (booking.reviewed) {
+        if (req.file) _image_upload_roleback(req.file.path);
         return res.status(400).json({
           message: "Booking is already reviewed",
         });
       }
 
       if (booking.status != "Completed-Job") {
+        if (req.file) _image_upload_roleback(req.file.path);
         return res.status(400).json({
           message: "Booking is not completed yet",
         });
@@ -377,6 +381,7 @@ router.post(
         message: "Your review has been submitted",
       });
     } catch (err) {
+      if (req.file) _image_upload_roleback(req.file.path);
       return res.status(500).json({
         message: "Error in processing payment",
         error: err,
