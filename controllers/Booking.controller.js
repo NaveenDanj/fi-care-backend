@@ -311,6 +311,7 @@ router.post(
       if (booking.userId != req.user._id) {
         return res.status(403).json({
           user: req.user,
+          booking,
           message:
             "Authorization error. You dont have proper permission to review this booking",
         });
