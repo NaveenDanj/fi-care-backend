@@ -358,17 +358,14 @@ router.post(
         }
 
         // 733520 = 720KB
-        if (req.file.size > 5000000) {
+        if (req.file.size > 1000000) {
           _image_upload_roleback(req.file.path);
           return res.status(400).json({
             message: "Image file size too large",
           });
         }
-
-        booking.rating = data.rating;
-        booking.feedback = data.feedback;
+        console.log("path is =>>>> ", req.file.path);
         booking.image = req.file.path.replaceAll("\\", "/");
-        booking.reviewed = true;
         await booking.save();
       }
 
@@ -383,6 +380,7 @@ router.post(
     } catch (err) {
       if (req.file) _image_upload_roleback(req.file.path);
       return res.status(500).json({
+        path: req.file.path,
         message: "Error in processing payment",
         error: err,
       });
