@@ -308,9 +308,9 @@ router.post(
         });
       }
 
-      if (booking.userId != req.user._id) {
+      if (booking.userId.toString() != req.user._id.toString()) {
         return res.status(403).json({
-          user: req.user,
+          user: booking.userId != req.user._id,
           booking,
           message:
             "Authorization error. You dont have proper permission to review this booking",
@@ -323,7 +323,7 @@ router.post(
         });
       }
 
-      if (booking.status == "Completed-Job") {
+      if (booking.status != "Completed-Job") {
         return res.status(400).json({
           message: "Booking is not completed yet",
         });
