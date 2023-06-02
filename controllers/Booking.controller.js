@@ -312,8 +312,6 @@ router.post(
       if (booking.userId.toString() != req.user._id.toString()) {
         if (req.file) _image_upload_roleback(req.file.path);
         return res.status(403).json({
-          user: booking.userId != req.user._id,
-          booking,
           message:
             "Authorization error. You dont have proper permission to review this booking",
         });
@@ -364,17 +362,13 @@ router.post(
             message: "Image file size too large",
           });
         }
-        console.log("path is =>>>> ", req.file.path);
         booking.image = req.file.path;
         await booking.save();
       }
-      console.log("path is =>>>> 2", req.file.path);
       booking.rating = data.rating;
       booking.feedback = data.feedback;
       booking.reviewed = true;
-      console.log("path is =>>>> 4", req.file.path);
       await booking.save();
-      console.log("path is =>>>> 3", req.file.path);
 
       return res.status(200).json({
         message: "Your review has been submitted",
@@ -382,13 +376,85 @@ router.post(
     } catch (err) {
       if (req.file) _image_upload_roleback(req.file.path);
       return res.status(500).json({
-        path: req.file.path,
         message: "Error in processing payment",
         error: err,
       });
     }
   }
 );
+
+router.get("/user-get-bookings", AuthRequired(), async (req, res) => {
+  let page = +req.query.page || 1;
+  let limit = +req.query.limit || 20;
+  let skip = (page - 1) * limit;
+  let type = req.query.type;
+
+  if (!type) {
+    return res.status(400).json({
+      message: "provide a status type",
+    });
+  }
+
+  // "Completed-Job"
+
+  try {
+    let bookings = await Booking.find({
+      userId: req.user._id,
+      status: type,
+    })
+      .skip(skip)
+      .limit(limit);
+
+    return res.status(200).json({
+      bookings,
+      paging: {
+        page: page,
+        limit: limit,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Error in fetching bookings",
+      error: err,
+    });
+  }
+});
+
+router.get("/get-all-bookings", AdminAuthRequired(), async (req, res) => {
+  let page = +req.query.page || 1;
+  let limit = +req.query.limit || 20;
+  let skip = (page - 1) * limit;
+  let type = req.query.type;
+
+  // "Completed-Job"
+
+  try {
+    let bookings = [];
+
+    if (!type) {
+      bookings = await Booking.find().skip(skip).limit(limit);
+    } else {
+      bookings = await Booking.find({
+        status: type,
+      })
+        .skip(skip)
+        .limit(limit);
+    }
+
+    return res.status(200).json({
+      bookings,
+      paging: {
+        page: page,
+        limit: limit,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Error in fetching bookings",
+      error: err,
+    });
+  }
+});
 
 const _image_upload_roleback = (filePath) => {
   fs.unlink(filePath, (err) => {
