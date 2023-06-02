@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 // @ts-ignore
 const AuthToken = require("../models/authtoken.model");
-const ServiceProvider = require("../models/serviceprovider.model");
+const ServiceProvider = require("../models/serviceprovider");
 
 const ServiceProviderAuthRequired = () => {
   return async (req, res, next) => {

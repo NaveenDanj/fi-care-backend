@@ -5,7 +5,7 @@ const Joi = require("joi");
 const Service = require("../models/service.model");
 const AdminAuthRequired = require("../middlewares/AdminAuthRequired.middleware");
 const ServiceProviderService = require("../models/ServiceProviderService.model");
-const ServiceProvider = require("../models/serviceprovider.model");
+const ServiceProvider = require("../models/serviceprovider");
 
 router.post("/create", AdminAuthRequired("SuperAdmin"), async (req, res) => {
   const categorySchema = Joi.object({

@@ -14,7 +14,7 @@ const AuthRequired = require("../middlewares/userauthrequired.middleware");
 // @ts-ignore
 const AuthToken = require("../models/authtoken.model");
 const OTP = require("../models/otp.model");
-const ServiceProvider = require("../models/serviceprovider.model");
+const ServiceProvider = require("../models/serviceprovider");
 const { handle_otp } = require("../services/otp.service");
 const ServiceProviderAuthRequired = require("../middlewares/ServiceProviderAuthRequired.middleware");
 
