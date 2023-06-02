@@ -3,8 +3,7 @@ const app = express();
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require("path");
-
-// const cron = require("node-cron");
+const cron = require("./cron-jobs/index");
 const mongoose = require("mongoose");
 
 require("dotenv").config();
