@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Joi = require("joi");
 const Service = require("../models/service.model");
-const ServiceProvider = require("../models/serviceprovider.model");
+const ServiceProvider = require("../models/ServiceProvider.model");
 const Booking = require("../models/Booking.model");
 const ServiceProviderService = require("../models/ServiceProviderService.model");
 const AuthRequired = require("../middlewares/userauthrequired.middleware");
@@ -308,6 +308,25 @@ router.post(
         });
       }
 
+      if (booking.userId != req.user._id) {
+        return res.status(403).json({
+          message:
+            "Authorization error. You dont have proper permission to review this booking",
+        });
+      }
+
+      if (booking.reviewed) {
+        return res.status(400).json({
+          message: "Booking is already reviewed",
+        });
+      }
+
+      if (booking.status == "Completed-Job") {
+        return res.status(400).json({
+          message: "Booking is not completed yet",
+        });
+      }
+
       if (req.file) {
         if (req.file.fieldname != "image") {
           _image_upload_roleback(req.file.path);
@@ -343,11 +362,13 @@ router.post(
         booking.rating = data.rating;
         booking.feedback = data.feedback;
         booking.image = req.file.path.replaceAll("\\", "/");
+        booking.reviewed = true;
         await booking.save();
       }
 
       booking.rating = data.rating;
       booking.feedback = data.feedback;
+      booking.reviewed = true;
       await booking.save();
 
       return res.status(200).json({

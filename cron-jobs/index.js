@@ -1,8 +1,8 @@
 const cron = require("node-cron");
 const checkTransaction = require("./CheckTransaction.script");
 
-cron.schedule("* * * * *", () => {
-  checkTransaction();
+cron.schedule("* * * * *", async () => {
+  await checkTransaction();
 });
 
 module.exports = cron;

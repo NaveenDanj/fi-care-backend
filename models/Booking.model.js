@@ -73,6 +73,12 @@ const BookingSchema = new Schema(
       default: "Request-Sent",
     },
 
+    reviewed: {
+      type: Boolean,
+      required: false,
+      default : false
+    },
+
     rating: {
       type: Number,
       required: false,
