@@ -3,12 +3,12 @@ const app = express();
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require("path");
-const cron = require("./cron-jobs/index");
 const mongoose = require("mongoose");
 
 require("dotenv").config();
 
 const api = require("./routes/api.js");
+const cron = require("./cron-jobs/index");
 
 mongoose
   .connect(process.env.MONGODB_CONNECTION_URL, {

@@ -60,6 +60,11 @@ const BookingSchema = new Schema(
       default: false,
     },
 
+    orderId: {
+      type: String,
+      required: false,
+    },
+
     status: {
       type: String,
       enum: [
@@ -76,7 +81,7 @@ const BookingSchema = new Schema(
     reviewed: {
       type: Boolean,
       required: false,
-      default : false
+      default: false,
     },
 
     rating: {

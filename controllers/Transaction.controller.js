@@ -51,12 +51,24 @@ router.post("/make-payment", AuthRequired(), async (req, res) => {
 
     if (_order) {
       return res.status(200).json({
-        message: "Payment processing",
+        message: "Payment already processed",
         _order,
       });
     }
 
     const requestId = generateUUIDToken();
+
+    let order = new Order({
+      userId: req.user._id,
+      bookingId: booking._id,
+      orderId: booking._id,
+      requestId,
+      amount: 100,
+      data: null,
+      status: "PENDING",
+    });
+
+    await order.save();
 
     let payload = {
       requestId,
@@ -107,7 +119,10 @@ router.post("/make-payment", AuthRequired(), async (req, res) => {
         country: "AE",
         set: true,
       },
-      returnUrl: "https://shop.example.com/payment-redirect/",
+      returnUrl:
+        process.env.APP_URL +
+        "/api/transaction/payment-redirect?id=" +
+        order._id,
       branchId: 0,
       allowedPaymentMethods: ["CARD"],
       defaultPaymentMethod: "CARD",
@@ -132,16 +147,7 @@ router.post("/make-payment", AuthRequired(), async (req, res) => {
       });
     }
 
-    let order = new Order({
-      userId: req.user._id,
-      bookingId: booking._id,
-      orderId: booking._id,
-      requestId,
-      amount: 100,
-      data: results.data,
-      status: "PENDING",
-    });
-
+    order.data = results.data;
     await order.save();
 
     return res.status(200).json({
@@ -157,7 +163,7 @@ router.post("/make-payment", AuthRequired(), async (req, res) => {
   }
 });
 
-router.get("/check-payment-status", async (req, res) => {
+router.get("/payment-redirect", async (req, res) => {
   let id = req.query.id;
 
   if (!id) {
@@ -193,6 +199,19 @@ router.get("/check-payment-status", async (req, res) => {
     order.status = data.data.result.status;
     await order.save();
 
+    if (data.data.result.status == "PAID") {
+      let booking = await Booking.findOne({ _id: order.bookingId });
+      booking.paid = true;
+      booking.orderId = order._id;
+      await booking.save();
+    } else if (
+      data.data.result.status == "EXPIRED" ||
+      data.data.result.status == "CANCELLED" ||
+      data.data.result.status == "FAILED"
+    ) {
+      await Order.deleteOne({ _id: order._id });
+    }
+
     return res.status(200).json({
       message: "Payment fetched successfully!",
       order,
@@ -204,5 +223,53 @@ router.get("/check-payment-status", async (req, res) => {
     });
   }
 });
+
+router.get("/get-user-payment-status", AuthRequired(), async (req, res) => {
+  let id = req.query.id;
+
+  if (!id) {
+    return res.status(400).json({
+      message: "Payment id required",
+    });
+  }
+
+  try {
+    let order = await Order.findOne({ _id: id });
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found!",
+      });
+    }
+
+    if (!order.data) {
+      return res.status(409).json({
+        message: "Order data missing!",
+      });
+    }
+
+    let data = await instance.get(`/checkout/${order.data.result.id}`, {
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+        "X-Paymennt-Api-Key": process.env.PAYMENT_GATEWAY_KEY,
+        "X-Paymennt-Api-Secret": process.env.PAYMENT_GATEWAY_SECRET,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Order details fetched successfully!",
+      data: data.data,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Error in fetching payment status",
+      error: err,
+    });
+  }
+});
+
+
+
 
 module.exports = router;
