@@ -7,11 +7,6 @@ const instance = require("../services/axios.service");
 const { generateUUIDToken } = require("../services/token.service");
 const Order = require("../models/Order.model");
 
-router.post("/payment-server-callback", async (req, res) => {
-  try {
-  } catch (err) {}
-});
-
 router.post("/make-payment", AuthRequired(), async (req, res) => {
   const validator = Joi.object({
     bookingId: Joi.string().required(),
@@ -49,6 +44,15 @@ router.post("/make-payment", AuthRequired(), async (req, res) => {
     if (booking.paid) {
       return res.status(404).json({
         message: "Payment is already completed for this booking",
+      });
+    }
+
+    let _order = await Order.findOne({ bookingId: booking._id });
+
+    if (_order) {
+      return res.status(200).json({
+        message: "Payment processing",
+        _order,
       });
     }
 
@@ -135,6 +139,7 @@ router.post("/make-payment", AuthRequired(), async (req, res) => {
       requestId,
       amount: 100,
       data: results.data,
+      status: "PENDING",
     });
 
     await order.save();
@@ -147,6 +152,54 @@ router.post("/make-payment", AuthRequired(), async (req, res) => {
     console.log("err : ", err);
     return res.status(500).json({
       message: "Error in processing transaction",
+      error: err,
+    });
+  }
+});
+
+router.get("/check-payment-status", async (req, res) => {
+  let id = req.query.id;
+
+  if (!id) {
+    return res.status(400).json({
+      message: "Payment id required",
+    });
+  }
+
+  try {
+    let order = await Order.findOne({ _id: id });
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found!",
+      });
+    }
+
+    if (!order.data) {
+      return res.status(409).json({
+        message: "Order data missing!",
+      });
+    }
+
+    let data = await instance.get(`/checkout/${order.data.result.id}`, {
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+        "X-Paymennt-Api-Key": process.env.PAYMENT_GATEWAY_KEY,
+        "X-Paymennt-Api-Secret": process.env.PAYMENT_GATEWAY_SECRET,
+      },
+    });
+    order.data = data.data;
+    order.status = data.data.result.status;
+    await order.save();
+
+    return res.status(200).json({
+      message: "Payment fetched successfully!",
+      order,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Error in fetching payment status",
       error: err,
     });
   }

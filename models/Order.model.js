@@ -1,6 +1,18 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+const dataSchema = new Schema(
+  {
+    success: {
+      type: Boolean,
+    },
+    elapsed: {
+      type: Number,
+    },
+  },
+  { strict: false }
+);
+
 const OrderSchema = new Schema(
   {
     userId: {
@@ -28,6 +40,17 @@ const OrderSchema = new Schema(
     amount: {
       type: Number,
       required: true,
+    },
+
+    status: {
+      type: String,
+      required: true,
+    },
+
+    data: {
+      type: dataSchema,
+      required: false,
+      default: null,
     },
   },
   { timestamps: true, strict: false }
