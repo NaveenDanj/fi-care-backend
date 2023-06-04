@@ -257,6 +257,14 @@ router.put(
         });
       }
 
+      if (data.status == "Completed-Job") {
+        booking.jobCompletedDateTime = new Date();
+      }
+
+      if (data.status == "Started-Job") {
+        booking.jobStartedDateTime = new Date();
+      }
+
       booking.status = data.status;
       await booking.save();
 

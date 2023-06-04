@@ -6,6 +6,7 @@ const Booking = require("../models/Booking.model");
 const instance = require("../services/axios.service");
 const { generateUUIDToken } = require("../services/token.service");
 const Order = require("../models/Order.model");
+const calculatePaymentAmount = require("../services/paymentCalculate.service");
 
 router.post("/make-payment", AuthRequired(), async (req, res) => {
   const validator = Joi.object({
@@ -269,7 +270,14 @@ router.get("/get-user-payment-status", AuthRequired(), async (req, res) => {
   }
 });
 
+router.get("/test-calc-amount", async (req, res) => {
+  let booking = await Booking.findOne({ _id: "647381d5efa02a4d7f377803" });
+  let amount = await calculatePaymentAmount(booking);
 
-
+  return res.status(200).json({
+    message: "test",
+    amount,
+  });
+});
 
 module.exports = router;
